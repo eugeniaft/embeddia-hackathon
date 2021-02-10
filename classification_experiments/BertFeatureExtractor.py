@@ -42,9 +42,12 @@ def load_feature_extractor():
         'EMBEDDIA/crosloengual-bert',
         use_fast=True
     )
+    def tokenizer_wrapper(*args, **kwargs):
+        kwargs['truncation'] = True; kwargs['max_length'] = 512
+        return tokenizer(*args, **kwargs)
     #print(tokenizer(txt))
     #model = AutoModelForSequenceClassification.from_pretrained('EMBEDDIA/crosloengual-bert', num_labels=3)
     #model = AutoModelForPreTraining.from_pretrained('EMBEDDIA/crosloengual-bert')
     model = AutoModel.from_pretrained('EMBEDDIA/crosloengual-bert')
-    fextr = FeatureExtractionPipeline(model, tokenizer)
+    fextr = FeatureExtractionPipeline(model, tokenizer_wrapper)
     return fextr

@@ -1,7 +1,8 @@
 import numpy as np
 from scipy.spatial.distance import cosine
 
-from classification_experimental.BertFeatureExtractor import BertFeatureExtractor, load_feature_extractor
+from classification_experiments.BertFeatureExtractor import BertFeatureExtractor, load_feature_extractor
+
 
 def extract_features_try0(txt="ovo je testni tekst"):
     fextr = load_feature_extractor()
