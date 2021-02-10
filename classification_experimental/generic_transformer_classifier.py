@@ -46,15 +46,15 @@ def trainer(args):
     training_args = TrainingArguments(
         model_name,
         evaluation_strategy="epoch",
-        learning_rate=2e-5,
-        per_device_train_batch_size=16,
-        per_device_eval_batch_size=16,
+        learning_rate=args.lr,
+        per_device_train_batch_size=args.per_device_train_batch_size,
+        per_device_eval_batch_size=args.per_device_eval_batch_size,
         num_train_epochs=args.epochs,
-        weight_decay=0.01,
+        weight_decay=args.weight_decay,
         do_train=True,
         do_eval=True,
         load_best_model_at_end=True,
-        metric_for_best_model='val_accuracy',
+        metric_for_best_model='accuracy',
     )
 
     trainer = Trainer(
