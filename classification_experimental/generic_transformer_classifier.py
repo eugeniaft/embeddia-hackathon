@@ -2,7 +2,7 @@
 # code adapted from:
 # https://colab.research.google.com/drive/1ayU3ERpzeJ8fHFJoEBCVCklxvvgjEz_P?usp=sharing#scrollTo=xxcHlNP21An8
 import torch
-from classification_experimental.datasets import DATASETS, DATA_LOADERS
+from classification_experimental.datasets_for_finetune import DATASETS, DATA_LOADERS
 from datasets import load_metric
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, \
     TrainingArguments, Trainer
