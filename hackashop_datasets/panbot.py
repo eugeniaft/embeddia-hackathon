@@ -10,6 +10,8 @@ from utils import clean_helper
 The base code is from https://github.com/EMBEDDIA/PAN2019/blob/master/gender/src/parse_data.py
 '''
 
+LABEL_MAPPING = {'bot': 0, 'human': 1}
+
 
 def load_panbot(part='all'):
     '''
@@ -68,7 +70,7 @@ def process_xml_files(data_dir, ground_truth):
         # remove empty strings
         if concatenated_text:
             texts.append(clean_helper(concatenated_text.strip()))
-            labels.append(type)
+            labels.append(LABEL_MAPPING[type])
 
     assert len(labels) == len(texts)
     return texts, labels
