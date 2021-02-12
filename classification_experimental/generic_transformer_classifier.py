@@ -24,7 +24,7 @@ def compute_metrics(eval_pred):
 def trainer(args):
     random_seed = args.random_seed
     task_name = args.task_name
-    data, labels = DATA_LOADERS[args.dataset]('train')
+    data, labels = DATA_LOADERS[args.dataset]() if args.nosplit else DATA_LOADERS[args.dataset]('train')
     pretrained_model = args.pretrained_model
 
     # TODO add cross validation
@@ -112,5 +112,6 @@ if __name__ == '__main__':
     parser.add_argument('--per_device_train_batch_size', type=int)
     parser.add_argument('--per_device_eval_batch_size', type=int)
     parser.add_argument('--weight_decay', type=float)
+    parser.add_argument('--nosplit', action='store_true')
     args = parser.parse_args()
     trainer(args)
