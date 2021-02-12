@@ -4,13 +4,12 @@
 import torch
 from classification_experimental.datasets import DATA_LOADERS, TaskDataset
 from datasets import load_metric
-from transformers import AutoTokenizer, AutoModelForSequenceClassification, \
+from transformers import AutoModelForSequenceClassification, \
     TrainingArguments, Trainer
 from argparse import ArgumentParser
 import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report
-from torch.utils.data import Dataset, DataLoader, SequentialSampler
+from torch.utils.data import DataLoader, SequentialSampler
 from tqdm import tqdm
 
 metric = load_metric('glue', 'sst2')
@@ -29,7 +28,7 @@ def trainer(args):
     pretrained_model = args.pretrained_model
 
     # TODO add cross validation
-    train, train_labels, test, test_labels = train_test_split(data, labels, test_size=0.8, random_state=random_seed)
+    train, test, train_labels, test_labels = train_test_split(data, labels, test_size=0.8, random_state=random_seed)
 
     dataset_clf = TaskDataset
     train_dataset = dataset_clf(texts=train, labels=train_labels, max_len=args.max_len,

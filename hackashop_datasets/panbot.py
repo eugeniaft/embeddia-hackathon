@@ -49,6 +49,7 @@ def process_xml_files(data_dir, ground_truth):
         ground_truth_dict[l[0]] = (l[1].strip(), l[2].strip())
     texts = []
     labels = []
+
     for file in data_dir.glob('*.xml'):
         name = file.stem
         try:

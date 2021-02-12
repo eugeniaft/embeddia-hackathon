@@ -57,7 +57,7 @@ class TaskDataset(torch.utils.data.Dataset):
         self.texts = self.tokenizer(texts, truncation=True, padding=True, max_length=max_len)
 
     def __getitem__(self, idx):
-        item = {key: torch.tensor(val[idx]) for key, val in self.encodings.items()}
+        item = {key: torch.tensor(val[idx]) for key, val in self.texts.items()}
         item['labels'] = torch.tensor(self.labels[idx])
         return item
 
