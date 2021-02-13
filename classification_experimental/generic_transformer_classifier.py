@@ -2,15 +2,14 @@
 # code adapted from:
 # https://colab.research.google.com/drive/1ayU3ERpzeJ8fHFJoEBCVCklxvvgjEz_P?usp=sharing#scrollTo=xxcHlNP21An8
 import torch
-from classification_experimental.datasets_for_finetune import DATASETS, DATA_LOADERS
+from classification_experimental.datasets_for_finetune import DATA_LOADERS, TaskDataset
 from datasets import load_metric
-from transformers import AutoTokenizer, AutoModelForSequenceClassification, \
+from transformers import AutoModelForSequenceClassification, \
     TrainingArguments, Trainer
 from argparse import ArgumentParser
 import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report
-from torch.utils.data import Dataset, DataLoader, SequentialSampler
+from torch.utils.data import DataLoader, SequentialSampler
 from tqdm import tqdm
 
 metric = load_metric('glue', 'sst2')
@@ -24,24 +23,24 @@ def compute_metrics(eval_pred):
 
 def trainer(args):
     random_seed = args.random_seed
-    data = DATA_LOADERS[args.dataset](args)
+    task_name = args.task_name
+    data, labels = DATA_LOADERS[args.dataset]() if args.nosplit else DATA_LOADERS[args.dataset]('train')
     pretrained_model = args.pretrained_model
-    label_name = args.label_name
 
     # TODO add cross validation
-    train, test = train_test_split(data, test_size=0.8, random_state=random_seed)
+    train, test, train_labels, test_labels = train_test_split(data, labels, test_size=0.8, random_state=random_seed)
 
-    dataset_clf = DATASETS[args.dataset]
-    train_dataset = dataset_clf(train, max_len=args.max_len, label=label_name,
+    dataset_clf = TaskDataset
+    train_dataset = dataset_clf(texts=train, labels=train_labels, max_len=args.max_len,
                                 tokenizer=pretrained_model)
-    val_dataset = dataset_clf(test, max_len=args.max_len, label=label_name,
+    val_dataset = dataset_clf(texts=test, labels=test_labels, max_len=args.max_len,
                               tokenizer=pretrained_model)
 
     # fine-tune/train BERT model for classification
     model = AutoModelForSequenceClassification.from_pretrained(
         pretrained_model, num_labels=args.num_label)
 
-    model_name = f"{pretrained_model}_{random_seed}_{label_name}"
+    model_name = f"{pretrained_model}_{random_seed}_{task_name}"
 
     training_args = TrainingArguments(
         model_name,
@@ -101,6 +100,7 @@ if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument('--dataset', type=str)
     parser.add_argument('--dataset_path', type=str)
+    parser.add_argument('--task_name', type=str)
     parser.add_argument('--random_seed', type=int)
     parser.add_argument('--pretrained_model', choices=['EMBEDDIA/crosloengual-bert'])
     parser.add_argument('--max_len', type=int)
@@ -112,5 +112,6 @@ if __name__ == '__main__':
     parser.add_argument('--per_device_train_batch_size', type=int)
     parser.add_argument('--per_device_eval_batch_size', type=int)
     parser.add_argument('--weight_decay', type=float)
+    parser.add_argument('--nosplit', action='store_true')
     args = parser.parse_args()
     trainer(args)
