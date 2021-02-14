@@ -10,7 +10,7 @@ def nyt_load(path):
     '''
     data_dir = Path(path)
     appended_ds = []
-    for f in glob.glob(data_dir + 'Comments*.csv'):
+    for f in data_dir.glob('Comments*.csv'):
         d = pd.read_csv(f)
         appended_ds.append(d)
     data = pd.concat(appended_ds)
