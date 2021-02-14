@@ -16,9 +16,8 @@ def ynacc_load(path, file="ydata-ynacc-v1_0_expert_annotations.tsv"):
 
 
 ynacc_constructive_labels = {'Not constructive': 0, 'Constructive': 1}
+ynacc_toxic_labels = {True:1, False:0}
 
-
-# ynacc_toxic_labels = {True:1, False:0}
 def load_ynacc_data(label_map=ynacc_constructive_labels, file="ydata-ynacc-v1_0_expert_annotations.tsv",
                     label='constructiveclass'):
     '''
