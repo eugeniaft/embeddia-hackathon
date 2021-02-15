@@ -2,6 +2,7 @@ from functools import reduce
 import pandas as pd
 import glob
 from pathlib import Path
+import csv
 
 from project_settings import WIKI_DATASET
 
@@ -29,7 +30,7 @@ wiki_aggression_labels = {True:1, False:0}
 wiki_attack_labels = {True:1, False:0}
 wiki_tox_agg_att_labels = {True:1, False:0}
 
-def load_wiki_data(label_map, label='toxicity'):
+def load_wiki_data(label_map=wiki_tox_agg_att_labels, label='all'):
     '''
     Load and prepare training data.
     :param label_map: defines the classfication problem: relevant string labels -> integer labels;

@@ -14,8 +14,9 @@ def socc_load(path, file='SFU_constructiveness_toxicity_corpus.csv'):
 
 socc_toxic_labels = {True:1, False:0}
 
-def load_socc_data(label_map, file='SFU_constructiveness_toxicity_corpus.csv',
-                    label='toxic'):
+def load_socc_data(label_map=socc_toxic_labels, 
+                   file='SFU_constructiveness_toxicity_corpus.csv',
+                   label='toxic'):
     '''
     Load and prepare training data.
     :param label_map: defines the classfication problem: relevant string labels -> integer labels;
@@ -25,9 +26,12 @@ def load_socc_data(label_map, file='SFU_constructiveness_toxicity_corpus.csv',
     text_column = data['comment_text']
     
     # create custom toxic label
+    # Very toxic (4) and Toxic (3)
+    # Each comment was annotated by at least three annotators 
+    # and the most popular answer is the first one
     if label == 'toxic':
-        toxic_level = data.toxicity_level.apply(lambda x: '3' in x or '4' in x)
-        not_constructive = data.is_constructive == 'no'
+        toxic_level = data.toxicity_level.apply(lambda x: x.startswith('3') or x.startswith('4'))
+        not_constructive = data.is_constructive != 'yes'
         label_column = toxic_level & not_constructive
 
     else:
