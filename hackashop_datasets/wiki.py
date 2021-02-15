@@ -4,7 +4,7 @@ import glob
 from pathlib import Path
 import csv
 
-from project_settings import WIKI_DATASET
+from project_settings_template import WIKI_DATASET
 
 def wiki_load(path, 
               labels = ('aggression', 'attack', 'toxicity'), 
@@ -54,4 +54,4 @@ def load_wiki_data(label_map=wiki_tox_agg_att_labels, label='all'):
     return texts, labels
 
 if __name__ == '__main__':
-    texts, labels = load_wiki_data(wiki_toxicity_labels)
+    texts, labels = load_wiki_data()

@@ -1,4 +1,5 @@
-from hackashop_datasets import socc, ynacc, wiki, 
+from hackashop_datasets import socc, ynacc, wiki
+from sklearn.model_selection import train_test_split
 
 
 def load_toxic_en_data():
@@ -30,7 +31,7 @@ def train_dev_test(data, labels, random_seed):
                   'dev': (dev, dev_labels),
                   'test': (test, test_labels)
                   }
-                  
+
     return split_data
 
 

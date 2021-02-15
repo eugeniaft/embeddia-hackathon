@@ -2,7 +2,7 @@ import pandas as pd
 from pathlib import Path
 import csv
 
-from project_settings import YNACC_DATASET
+from project_settings_template import YNACC_DATASET
 
 
 def ynacc_load(path, file="ydata-ynacc-v1_0_expert_annotations.tsv"):

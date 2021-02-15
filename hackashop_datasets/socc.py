@@ -1,7 +1,7 @@
 import pandas as pd
 from pathlib import Path
 
-from project_settings import SOCC_DATASET
+from project_settings_template import SOCC_DATASET
 
 def socc_load(path, file='SFU_constructiveness_toxicity_corpus.csv'):
     '''
