@@ -12,15 +12,17 @@ class TaskDataset(torch.utils.data.Dataset):
     def __init__(self, texts, labels, max_len, tokenizer):
         self.tokenizer = AutoTokenizer.from_pretrained(tokenizer)
         self.labels = labels
+        self.len = len(texts)
         self.texts = self.tokenizer(texts, truncation=True, padding=True, max_length=max_len)
 
     def __getitem__(self, idx):
         item = {key: torch.tensor(val[idx]) for key, val in self.texts.items()}
-        item['labels'] = torch.tensor(self.labels[idx])
+        if self.labels:
+            item['labels'] = torch.tensor(self.labels[idx])
         return item
 
     def __len__(self):
-        return len(self.labels)
+        return self.len
 
 
 DATA_LOADERS = {
