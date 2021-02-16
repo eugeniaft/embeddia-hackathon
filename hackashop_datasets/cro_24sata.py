@@ -143,13 +143,7 @@ def cro24_validate_split():
     assert(len(ixtr.intersection(ixdv)) == 0)
     assert(len(ixts.intersection(ixdv)) == 0)
 
-def cro24_load_forclassif(part):
-    '''
-    Loading of final datasets used for classification experiments
-    :param part - 'train', 'dev', or 'test'
-    :returns texts, labels
-    '''
-    dset = cro24sata_load_byyear(2019, label=f'_nosmallcat_{part}')
+def cro24_texts_labels_from_dframe(dset):
     label_column = dset['infringed_on_rule']
     text_column = dset['content']
     texts, labels = [], []
@@ -161,6 +155,36 @@ def cro24_load_forclassif(part):
         texts.append(text_column[i])
     return texts, labels
 
+def cro24_load_forclassif(part):
+    '''
+    Loading of final datasets used for classification experiments
+    :param part - 'train', 'dev', or 'test'
+    :returns texts, labels
+    '''
+    dset = cro24sata_load_byyear(2019, label=f'_nosmallcat_{part}')
+    return cro24_texts_labels_from_dframe(dset)
+
+def cro24_build_tfidf():
+    from pickle import dump
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.pipeline import FeatureUnion
+    dset = cro24sata_load_byyear(2019, label=f'_nosmallcat')
+    texts, _ = cro24_texts_labels_from_dframe(dset)
+    fextr = TfidfVectorizer(max_features=25000, sublinear_tf=True)
+    #fextr.fit(texts)
+    fextr_2g = TfidfVectorizer(max_features=25000, sublinear_tf=True, ngram_range=(2, 2))
+    #fextr_2g.fit(texts)
+    union = FeatureUnion([("words", fextr),
+                          ("bigrams", fextr_2g)])
+    union.fit(texts)
+    save_dir = Path(CRO_24SATA_DATASET); savefile = save_dir / 'cro24_tfidf_2g.pickle'
+    dump(union, open(savefile, 'wb'))
+
+def cro24_load_tfidf():
+    from pickle import load
+    save_dir = Path(CRO_24SATA_DATASET); savefile = save_dir / 'cro24_tfidf_2g.pickle'
+    return load(open(savefile, 'rb'))
+
 if __name__ == '__main__':
     #cro24sata_explore()
     #cro24sata_filterbyyear(2019)
@@ -170,5 +194,7 @@ if __name__ == '__main__':
     #cro24data_label_sample(4.0)
     #cro24sata_filter_categories(2019, [2.0, 4.0, 7.0], '_nosmallcat')
     #cro24sata_balance_dataset(2019, '_nosmallcat', 40000, 10000, 10000)
-    cro24_validate_split()
+    #cro24_validate_split()
+    cro24_build_tfidf()
+    #cro24_load_tfidf()
 

@@ -105,6 +105,19 @@ def est_validate_split():
     assert(len(ixtr.intersection(ixdv)) == 0)
     assert(len(ixts.intersection(ixdv)) == 0)
 
+def est_texts_labels_from_dframe(dset):
+    label_column = dset['is_enabled']
+    text_column = dset['content']
+    texts, labels = [], []
+    for i in dset.index:
+        if type(text_column[i]) == float: continue
+        l = label_column[i]
+        if l == 1: label = 0
+        else: label = 1;
+        labels.append(label)
+        texts.append(text_column[i])
+    return texts, labels
+
 def est_load_forclassif(part):
     '''
     Loading of final datasets used for classification experiments
@@ -112,16 +125,28 @@ def est_load_forclassif(part):
     :returns texts, labels
     '''
     dset = est_express_load(label=f'_estonly_{part}')
-    label_column = dset['is_enabled']
-    text_column = dset['content']
-    texts, labels = [], []
-    for i in dset.index:
-        l = label_column[i]
-        if l == 1: label = 0
-        else: label = 1;
-        labels.append(label)
-        texts.append(text_column[i])
-    return texts, labels
+    return est_texts_labels_from_dframe(dset)
+
+def est_build_tfidf():
+    from pickle import dump
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.pipeline import FeatureUnion
+    dset = est_express_load(label=f'_estonly')
+    texts, _ = est_texts_labels_from_dframe(dset)
+    fextr = TfidfVectorizer(max_features=25000, sublinear_tf=True)
+    #fextr.fit(texts)
+    fextr_2g = TfidfVectorizer(max_features=25000, sublinear_tf=True, ngram_range=(2, 2))
+    union = FeatureUnion([("words", fextr),
+                          ("bigrams", fextr_2g)])
+    union.fit(texts)
+    save_dir = Path(EST_EXPRESS_DATASET); savefile = save_dir / 'est_tfidf_2g.pickle'
+    dump(union, open(savefile, 'wb'))
+
+def est_load_tfidf():
+    from pickle import load
+    save_dir = Path(EST_EXPRESS_DATASET); savefile = save_dir / 'est_tfidf_2g.pickle'
+    return load(open(savefile, 'rb'))
+
 
 if __name__ == '__main__':
     #estexpress_load_raw()
@@ -130,6 +155,7 @@ if __name__ == '__main__':
     #clean_dataset()
     #print_dataset(est_express_load())
     #label_distribution(estexpress_load_raw())
-    label_distribution(est_express_load())
+    #label_distribution(est_express_load())
     #est_balance_dataset(40000, 10000, 10000)
     #est_validate_split()
+    est_build_tfidf()
