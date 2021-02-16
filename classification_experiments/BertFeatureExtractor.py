@@ -7,11 +7,12 @@ class BertFeatureExtractor():
     Converts a (string) text to a numpy feature vector using FeatureExtractionPipeline.
     '''
 
-    def __init__(self, bert=None, strategy="avg"):
+    def __init__(self, bert=None, strategy="avg", max_length=512):
         '''
         :param strategy: avg, first-layer, last-layer
+        :param max_length: passed as parameter to BERT's tokenizeer
         '''
-        if bert is None: self._bert = load_feature_extractor()
+        if bert is None: self._bert = load_feature_extractor(max_length=max_length)
         else: self._bert = bert
         self._strategy = strategy
 
@@ -34,7 +35,7 @@ class BertFeatureExtractor():
     ######### scikit-learn interface
 
 
-def load_feature_extractor():
+def load_feature_extractor(max_length=512):
     '''
     Load a pretrained BERT wrapped as a tranformers.FeatureExtractionPipeline.
     '''
@@ -43,7 +44,7 @@ def load_feature_extractor():
         use_fast=True
     )
     def tokenizer_wrapper(*args, **kwargs):
-        kwargs['truncation'] = True; kwargs['max_length'] = 512
+        kwargs['truncation'] = True; kwargs['max_length'] = max_length
         return tokenizer(*args, **kwargs)
     #print(tokenizer(txt))
     #model = AutoModelForSequenceClassification.from_pretrained('EMBEDDIA/crosloengual-bert', num_labels=3)
