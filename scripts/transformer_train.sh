@@ -1,7 +1,6 @@
 python -m classification_experimental.generic_transformer_classifier \
---dataset ynacc \
---task_name constructiveness \
---dataset_path data/ydata-ynacc-v1_0 \
+--dataset en_toxic \
+--task_name toxicity \
 --random_seed 42 \
 --pretrained_model EMBEDDIA/crosloengual-bert \
 --max_len 128 \
@@ -13,7 +12,6 @@ python -m classification_experimental.generic_transformer_classifier \
 --weight_decay 0.01 \
 --fine_tune \
 --nosplit
-
 
 #python -m classification_experimental.generic_transformer_classifier \
 #--dataset pan_bot \
