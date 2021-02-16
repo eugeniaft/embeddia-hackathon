@@ -2,6 +2,7 @@ from transformers import AutoTokenizer
 import torch
 from hackashop_datasets.panbot import load_panbot
 from hackashop_datasets.ynacc import load_ynacc_data
+from hackashop_datasets.load_data import load_toxic_en_data
 
 
 class TaskDataset(torch.utils.data.Dataset):
@@ -27,5 +28,6 @@ class TaskDataset(torch.utils.data.Dataset):
 
 DATA_LOADERS = {
     'ynacc': load_ynacc_data,
+    'en_toxic': load_toxic_en_data
     'pan_bot': load_panbot
 }
