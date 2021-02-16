@@ -43,6 +43,24 @@ def build_and_test_classifier(data, features="bert", classifier="logreg",
     # calculate
     test_classifier(classif, (texts_test, labels_test), subsample=False)
 
+def build_and_test_classifier_split(train, test,
+                                    features='bert', classifier='logreg', rseed=572):
+    '''
+    Build and test binary classifier on a train/test split data.
+    :param train: (texts, labels) pair - list of texts, list of binary labels
+    :param test: (texts, labels) pair - list of texts, list of binary labels
+    :param features: 'bert' of 'tfidf'
+    :return:
+    '''
+    classif = create_classifier(features, classifier)
+    # prepare data
+    texts_train, labels_train  = train
+    texts_test, labels_test = test
+    N = len(texts_train); print(f'train size: {N}')
+    # train
+    classif.fit(texts_train, labels_train)
+    # calculate
+    test_classifier(classif, (texts_test, labels_test), subsample=False)
 
 def create_classifier(features='bert', classifier='logreg'):
     '''

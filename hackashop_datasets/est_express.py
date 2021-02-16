@@ -105,6 +105,24 @@ def est_validate_split():
     assert(len(ixtr.intersection(ixdv)) == 0)
     assert(len(ixts.intersection(ixdv)) == 0)
 
+def est_load_forclassif(part):
+    '''
+    Loading of final datasets used for classification experiments
+    :param part - 'train', 'dev', or 'test'
+    :returns texts, labels
+    '''
+    dset = est_express_load(label=f'_estonly_{part}')
+    label_column = dset['is_enabled']
+    text_column = dset['content']
+    texts, labels = [], []
+    for i in dset.index:
+        l = label_column[i]
+        if l == 1: label = 0
+        else: label = 1;
+        labels.append(label)
+        texts.append(text_column[i])
+    return texts, labels
+
 if __name__ == '__main__':
     #estexpress_load_raw()
     #print_dataset(estexpress_load_raw())
