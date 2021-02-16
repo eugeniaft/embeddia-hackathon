@@ -3,50 +3,62 @@
 # https://colab.research.google.com/drive/1ayU3ERpzeJ8fHFJoEBCVCklxvvgjEz_P?usp=sharing#scrollTo=xxcHlNP21An8
 import torch
 from classification_experimental.datasets_for_finetune import DATA_LOADERS, TaskDataset
-from datasets import load_metric
+from hackashop_datasets.load_data import train_dev_test
+# from datasets import load_metric
+from sklearn.metrics import f1_score, precision_score, recall_score, accuracy_score
 from transformers import AutoModelForSequenceClassification, \
     TrainingArguments, Trainer, AutoTokenizer
 from argparse import ArgumentParser
 import numpy as np
-from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, SequentialSampler
 import torch.nn.functional as F
 import pandas as pd
 
-metric = load_metric('glue', 'sst2')
+# metric = load_metric('glue', 'sst2')
 
+# def compute_metrics(eval_pred):
+#     predictions, labels = eval_pred
+#     predictions = np.argmax(predictions, axis=1)
+#     return metric.compute(predictions=predictions, references=labels)
 
 def compute_metrics(eval_pred):
     predictions, labels = eval_pred
     predictions = np.argmax(predictions, axis=1)
-    return metric.compute(predictions=predictions, references=labels)
-
+    f1 = f1_score(labels, predictions)
+    pre = precision_score(labels, predictions)
+    rec = recall_score(labels, predictions)
+    acc = accuracy_score(labels, predictions)
+    return {'acc': acc, 'rec': rec, 'f1': f1, 'pre': pre}
 
 def trainer(args):
     random_seed = args.random_seed
     task_name = args.task_name
-    data, labels = DATA_LOADERS[args.dataset]() if args.nosplit else DATA_LOADERS[args.dataset]('train')
+    data, labels = DATA_LOADERS[args.dataset]()
     pretrained_model = args.pretrained_model
+    lr = args.lr
+    max_len = args.max_len
 
-    # TODO add cross validation
-    train, test, train_labels, test_labels = train_test_split(data, labels, test_size=0.8, random_state=random_seed)
-
-    dataset_clf = TaskDataset
-    train_dataset = dataset_clf(texts=train, labels=train_labels, max_len=args.max_len,
-                                tokenizer=pretrained_model)
-    val_dataset = dataset_clf(texts=test, labels=test_labels, max_len=args.max_len,
-                              tokenizer=pretrained_model)
+    data_splits = train_dev_test(data, labels, random_seed)
+    task_clf = TaskDataset
+    train_dataset = task_clf(texts=data_splits['train'][0], 
+                             labels=data_splits['train'][1], 
+                             max_len=max_len,
+                             tokenizer=pretrained_model)
+    val_dataset = task_clf(texts=data_splits['dev'][0], 
+                           labels=data_splits['dev'][1], 
+                           max_len=max_len,
+                           tokenizer=pretrained_model)
 
     # fine-tune/train BERT model for classification
     model = AutoModelForSequenceClassification.from_pretrained(
         pretrained_model, num_labels=args.num_label)
 
-    model_name = f"{pretrained_model}_{random_seed}_{task_name}"
+    model_name = f"{pretrained_model}_{random_seed}_{task_name}_{lr}_{max_len}"
 
     training_args = TrainingArguments(
         model_name,
         evaluation_strategy="epoch",
-        learning_rate=args.lr,
+        learning_rate=lr,
         per_device_train_batch_size=args.per_device_train_batch_size,
         per_device_eval_batch_size=args.per_device_eval_batch_size,
         num_train_epochs=args.epochs,
@@ -127,7 +139,7 @@ def predict_fn(device, fine_tuned_model, max_len, texts, tokenizer):
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument('--dataset', type=str)
-    parser.add_argument('--dataset_path', type=str)
+    # parser.add_argument('--dataset_path', type=str)
     parser.add_argument('--task_name', type=str)
     parser.add_argument('--random_seed', type=int)
     parser.add_argument('--pretrained_model', choices=['EMBEDDIA/crosloengual-bert'])

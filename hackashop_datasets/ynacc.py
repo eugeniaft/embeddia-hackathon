@@ -2,7 +2,7 @@ import pandas as pd
 from pathlib import Path
 import csv
 
-from project_settings import YNACC_DATASET
+from project_settings_template import YNACC_DATASET
 
 
 def ynacc_load(path, file="ydata-ynacc-v1_0_expert_annotations.tsv"):
@@ -18,8 +18,8 @@ def ynacc_load(path, file="ydata-ynacc-v1_0_expert_annotations.tsv"):
 ynacc_constructive_labels = {'Not constructive': 0, 'Constructive': 1}
 ynacc_toxic_labels = {True:1, False:0}
 
-def load_ynacc_data(label_map=ynacc_constructive_labels, file="ydata-ynacc-v1_0_expert_annotations.tsv",
-                    label='constructiveclass'):
+def load_ynacc_data(label_map=ynacc_toxic_labels, file="ydata-ynacc-v1_0_expert_annotations.tsv",
+                    label='toxic'):
     '''
     Load and prepare training data.
     :param label_map: defines the classfication problem: relevant string labels -> integer labels;
@@ -31,10 +31,10 @@ def load_ynacc_data(label_map=ynacc_constructive_labels, file="ydata-ynacc-v1_0_
     # create custom toxic label
     if label == 'toxic':
 
-        insulting = data.sd_type.fillna('').apply(lambda x: 'insulting' in x)
+        insulting = data.sd_type.fillna('').apply(lambda x: 'insulting' in x or 'Off-topic/digression' in x)
         mean = data.tone.fillna('').apply(lambda x: 'mean' in x.lower())
-        constructive = data.constructiveclass == 'Constructive'
-        label_column = (insulting | mean) & (~constructive)
+        not_constructive = data.constructiveclass != 'Constructive'
+        label_column = (insulting | mean) & (not_constructive)
 
     else:
         label_column = data[label]
