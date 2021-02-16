@@ -15,12 +15,14 @@ def cro_classifier_v0():
     # todo: Xvalid param opt
     train = cro24_load_forclassif('train')
     dev = cro24_load_forclassif('dev')
-    build_and_test_classifier_split(train, dev, features='tfidf')
+    build_and_test_classifier_split(train, dev,
+                                    features='tfidf-cro', classifier='svc-grid')
 
 def est_classifier_v0():
     train = est_load_forclassif('train')
     dev = est_load_forclassif('dev')
-    build_and_test_classifier_split(train, dev, features='tfidf')
+    build_and_test_classifier_split(train, dev,
+                                    features='tfidf-est', classifier='svc-grid')
 
 if __name__ == '__main__':
     #cro_classifier_v0()

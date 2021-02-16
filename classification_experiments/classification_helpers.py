@@ -1,4 +1,4 @@
-import random
+import random, numpy as np
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
@@ -6,8 +6,12 @@ from sklearn.metrics import f1_score, precision_score, recall_score
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.svm import SVC
+from sklearn.model_selection import GridSearchCV, StratifiedKFold
 
 from classification_experiments.BertFeatureExtractor import BertFeatureExtractor
+from classification_experiments.classification_models import build_classifier
+from hackashop_datasets.cro_24sata import cro24_load_tfidf
+from hackashop_datasets.est_express import est_load_tfidf
 
 
 def get_classifier(c):
@@ -19,7 +23,6 @@ def get_classifier(c):
         return LogisticRegression(solver='liblinear', max_iter=1000, penalty='l1', C=1.0)
     elif c == 'svm':
         return SVC()
-
 
 def build_and_test_classifier(data, features="bert", classifier="logreg",
                               subsample=None, rseed=572):
@@ -52,15 +55,30 @@ def build_and_test_classifier_split(train, test,
     :param features: 'bert' of 'tfidf'
     :return:
     '''
-    classif = create_classifier(features, classifier)
+    np.random.seed(rseed)
     # prepare data
     texts_train, labels_train  = train
     texts_test, labels_test = test
     N = len(texts_train); print(f'train size: {N}')
-    # train
-    classif.fit(texts_train, labels_train)
+    # feature extraction
+    if features == 'bert': fextr = BertFeatureExtractor();
+    elif features == 'tfidf': # fit tfidf on train+test texts
+        fextr = TfidfVectorizer(sublinear_tf=True)
+        all_texts = []; all_texts.extend(texts_train); all_texts.extend(texts_test)
+        fextr.fit(all_texts)
+    elif features == 'tfidf-cro': fextr = cro24_load_tfidf()
+    elif features == 'tfidf-est': fextr = est_load_tfidf()
+    feats_train = fextr.transform(texts_train)
+    feats_test = fextr.transform(texts_test)
+    # train model
+    classif = create_classifier_grid(classifier)
+    classif.fit(feats_train, labels_train)
+    if ('grid' in classifier):
+        print(classif.best_estimator_)
+        print(classif.best_params_)
+        print(classif.best_score_)
     # calculate
-    test_classifier(classif, (texts_test, labels_test), subsample=False)
+    test_classifier(classif, (feats_test, labels_test), subsample=False)
 
 def create_classifier(features='bert', classifier='logreg'):
     '''
@@ -69,14 +87,34 @@ def create_classifier(features='bert', classifier='logreg'):
     :parameter classifier: 'logreg' or 'svm'
     :return:
     '''
-    if features == "bert": fextr = BertFeatureExtractor();
-    elif features == "tfidf": fextr = TfidfVectorizer()
+    if features == 'bert': fextr = BertFeatureExtractor();
+    elif features == 'tfidf': fextr = TfidfVectorizer()
     classifier = get_classifier(classifier)
-    pipe = [("fextr", fextr),
-            ("classifier", classifier)]
+    pipe = [('fextr', fextr),
+            ('classifier', classifier)]
     pipe = Pipeline(pipe)
     return pipe
 
+def create_classifier_grid(classifier='logreg'):
+    '''
+    Factory method building scikit-learn classifiers, possibly
+     wrapped in a crossvalidation fitter using grid search.
+    :param c: classifier label
+    '''
+    #if features == 'bert': fextr = BertFeatureExtractor();
+    #elif features == 'tfidf': fextr = TfidfVectorizer()
+    if 'grid' in classifier:
+        model, paramgrid = build_classifier(classifier)
+        # model_label = 'classifier'
+        # pipe = [('feature_extr', fextr),
+        #         (model_label, model)]
+        # pipe = Pipeline(pipe)
+        # grid = {'%s__%s' % (model_label, k): v for k, v in paramgrid.items()}
+        # cvFitter = GridSearchCV(estimator=pipe, param_grid=grid, cv=5,
+        #                         scoring='f1', verbose=True, n_jobs=3)
+        cvFitter = GridSearchCV(estimator=model, param_grid=paramgrid, cv=5,
+                                scoring='f1', verbose=True, n_jobs=3)
+        return cvFitter
 
 def create_train_classifier(train, features='bert', classifier='logreg', subsample=False, rseed=883):
     '''
