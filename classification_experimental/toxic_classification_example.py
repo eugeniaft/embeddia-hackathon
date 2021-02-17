@@ -28,7 +28,7 @@ def build_and_test_classifier(features="bert",
     
     # prepare data
     texts, labels = load_data.load_toxic_en_data()
-    data_split = train_dev_test(texts, labels, rseed)
+    data_split = load_data.train_dev_test(texts, labels, rseed)
     
     # train
     pipe.fit(data_split['train'][0], data_split['train'][1])
