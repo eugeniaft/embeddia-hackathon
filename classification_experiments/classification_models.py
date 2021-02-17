@@ -14,15 +14,13 @@ def logistic_grid():
                                   'penalty':['l1'],
                                   'solver':['liblinear'],
                                   'max_iter': [100],
-                                  'class_weight' : ['balanced']
                                   }
 
 def svc_grid():
     return LinearSVC(), { 'C': [0.001, 0.01, 0.1, 1, 10, 100, 1000],
-                    #'penalty': ['l2'],
-                    'penalty': ['l1'], 'dual': [False],
+                    'penalty': ['l2'],
+                    #'penalty': ['l1'], 'dual': [False],
                     'max_iter': [1500],
-                    'class_weight': ['balanced'],
                     }
 
 
@@ -45,7 +43,6 @@ def build_classifier(c):
     '''
     if (c.endswith('-grid')): # create grid for cross valid grid search
         classif = c[:-5]
-        print(classif)
         if classif == 'logreg': return logistic_grid()
         elif classif == 'svc': return svc_grid()
         elif classif == 'rf': return  randomforest_grid()

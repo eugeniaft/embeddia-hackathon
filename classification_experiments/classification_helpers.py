@@ -10,6 +10,7 @@ from sklearn.model_selection import GridSearchCV, StratifiedKFold
 
 from classification_experiments.BertFeatureExtractor import BertFeatureExtractor
 from classification_experiments.classification_models import build_classifier
+from classification_experiments.feature_extraction import *
 from hackashop_datasets.cro_24sata import cro24_load_tfidf
 from hackashop_datasets.est_express import est_load_tfidf
 
@@ -46,8 +47,9 @@ def build_and_test_classifier(data, features="bert", classifier="logreg",
     # calculate
     test_classifier(classif, (texts_test, labels_test), subsample=False)
 
-def build_and_test_classifier_split(train, test,
-                                    features='bert', classifier='logreg', rseed=572):
+def build_and_test_classifier_split(train, test, classifier='logreg', balanced=False,
+                                    features='bert', bigrams=False, binary=True,
+                                    label = '', rseed=572):
     '''
     Build and test binary classifier on a train/test split data.
     :param train: (texts, labels) pair - list of texts, list of binary labels
@@ -55,15 +57,21 @@ def build_and_test_classifier_split(train, test,
     :param features: 'bert' of 'tfidf'
     :return:
     '''
-    np.random.seed(rseed)
-    # prepare data
     texts_train, labels_train  = train
     texts_test, labels_test = test
-    N = len(texts_train); print(f'train size: {N}')
+    N = len(texts_train);
+    print(f'classification {label}: {classifier}, bal:{balanced}, '
+          f'feats:{features}, bigrams:{bigrams}, binary:{binary}, seed:{rseed}, train size: {N}')
+    np.random.seed(rseed)
+    # prepare data
     # feature extraction
     if features == 'bert': fextr = BertFeatureExtractor();
     elif features == 'tfidf': # fit tfidf on train+test texts
-        fextr = TfidfVectorizer(sublinear_tf=True)
+        fextr = tfidf_features(bigrams=bigrams)
+        all_texts = []; all_texts.extend(texts_train); all_texts.extend(texts_test)
+        fextr.fit(all_texts)
+    elif features == 'wcount':
+        fextr = wcount_features(bigrams=bigrams, binary=binary)
         all_texts = []; all_texts.extend(texts_train); all_texts.extend(texts_test)
         fextr.fit(all_texts)
     elif features == 'tfidf-cro': fextr = cro24_load_tfidf()
@@ -71,12 +79,9 @@ def build_and_test_classifier_split(train, test,
     feats_train = fextr.transform(texts_train)
     feats_test = fextr.transform(texts_test)
     # train model
-    classif = create_classifier_grid(classifier)
+    classif = create_classifier_grid(classifier, balanced=balanced)
     classif.fit(feats_train, labels_train)
-    if ('grid' in classifier):
-        print(classif.best_estimator_)
-        print(classif.best_params_)
-        print(classif.best_score_)
+    if ('grid' in classifier): print(classif.best_params_, classif.best_score_)
     # calculate
     test_classifier(classif, (feats_test, labels_test), subsample=False)
 
@@ -95,7 +100,7 @@ def create_classifier(features='bert', classifier='logreg'):
     pipe = Pipeline(pipe)
     return pipe
 
-def create_classifier_grid(classifier='logreg'):
+def create_classifier_grid(classifier='logreg', balanced=False):
     '''
     Factory method building scikit-learn classifiers, possibly
      wrapped in a crossvalidation fitter using grid search.
@@ -105,6 +110,7 @@ def create_classifier_grid(classifier='logreg'):
     #elif features == 'tfidf': fextr = TfidfVectorizer()
     if 'grid' in classifier:
         model, paramgrid = build_classifier(classifier)
+        if balanced: paramgrid['class_weight'] = ['balanced']
         # model_label = 'classifier'
         # pipe = [('feature_extr', fextr),
         #         (model_label, model)]
