@@ -25,12 +25,15 @@ def hasoc_load_raw(path=HASOC2019_DATASET, part='all'):
 
 hasoc_labels_hateoffensive = {'NOT':0, 'HOF':1}
 
-def load_hasoc_data(label_map, text_column="text", label_column="task_1"):
+def load_hasoc_data(label_map=hasoc_labels_hateoffensive, 
+                    text_column="text", label_column="task_1"):
     '''
     Load hasoc dataset ready for binary classification: hate/offensive or NO
     returns: texts, labels [0, 1]
     '''
     data = hasoc_load_raw(part="all")
+    # droping duplicates that might have different labels
+    data = data.drop_duplicates(subset=[text_column]).reset_index(drop=True)
     text_column = data[text_column]
     label_column = data[label_column]
     # print all labels
