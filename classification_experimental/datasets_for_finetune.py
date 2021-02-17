@@ -28,6 +28,6 @@ class TaskDataset(torch.utils.data.Dataset):
 
 DATA_LOADERS = {
     'ynacc': load_ynacc_data,
-    'en_toxic': load_toxic_en_data
+    'en_toxic': load_toxic_en_data,
     'pan_bot': load_panbot
 }

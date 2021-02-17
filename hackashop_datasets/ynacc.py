@@ -12,7 +12,7 @@ def ynacc_load(path, file="ydata-ynacc-v1_0_expert_annotations.tsv"):
     data_dir = Path(path)
     data_file = data_dir / file
     data = pd.read_csv(data_file, sep="\t", engine='python', quoting=csv.QUOTE_NONE)
-    return data
+    return data.drop_duplicates().reset_index()
 
 
 ynacc_constructive_labels = {'Not constructive': 0, 'Constructive': 1}
@@ -30,12 +30,15 @@ def load_ynacc_data(label_map=ynacc_toxic_labels, file="ydata-ynacc-v1_0_expert_
 
     # create custom toxic label
     if label == 'toxic':
-
         insulting = data.sd_type.fillna('').apply(lambda x: 'insulting' in x or 'Off-topic/digression' in x)
         mean = data.tone.fillna('').apply(lambda x: 'mean' in x.lower())
         not_constructive = data.constructiveclass != 'Constructive'
-        label_column = (insulting | mean) & (not_constructive)
-
+        is_toxic = (insulting | mean) & (not_constructive)
+        data['toxic'] = is_toxic
+        grouped_comments = data.groupby('commentid')['toxic'].mean() > 0.5
+        data = data[['commentid', 'text']].drop_duplicates().merge(grouped_comments.reset_index())
+        text_column = data['text']
+        label_column = data['toxic']
     else:
         label_column = data[label]
     # print all labels
