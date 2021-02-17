@@ -13,6 +13,8 @@ from classification_experiments.classification_models import build_classifier
 from classification_experiments.feature_extraction import *
 from hackashop_datasets.cro_24sata import cro24_load_tfidf
 from hackashop_datasets.est_express import est_load_tfidf
+from classification_experiments.feature_extraction import bert_feature_loader
+from scipy.sparse import csr_matrix, hstack
 
 
 def get_classifier(c):
@@ -47,9 +49,20 @@ def build_and_test_classifier(data, features="bert", classifier="logreg",
     # calculate
     test_classifier(classif, (texts_test, labels_test), subsample=False)
 
+from sklearn.pipeline import FeatureUnion
+class IndexTransformer():
+    def __init__(self, features):
+        self._feats = features
+    def fit(self, X): pass
+    def transform(self, ix):
+        if isinstance(ix, list): return [self._feats[i] for i in ix]
+        else: return self._feats[ix]
+
 def build_and_test_classifier_split(train, test, classifier='logreg', balanced=False,
                                     features='bert', bigrams=False, binary=True,
-                                    label = '', rseed=572):
+                                    label = '', rseed=572,
+                                    bert_loader =
+                                    {'dset':'', 'train_label':'', 'test_label':'', 'bert':''}):
     '''
     Build and test binary classifier on a train/test split data.
     :param train: (texts, labels) pair - list of texts, list of binary labels
@@ -65,19 +78,44 @@ def build_and_test_classifier_split(train, test, classifier='logreg', balanced=F
     np.random.seed(rseed)
     # prepare data
     # feature extraction
+    transform = True
     if features == 'bert': fextr = BertFeatureExtractor();
     elif features == 'tfidf': # fit tfidf on train+test texts
         fextr = tfidf_features(bigrams=bigrams)
         all_texts = []; all_texts.extend(texts_train); all_texts.extend(texts_test)
         fextr.fit(all_texts)
+    elif features == 'tfidf+bert':
+        transform = False
+        count_extr = tfidf_features(bigrams=bigrams)
+        all_texts = []; all_texts.extend(texts_train); all_texts.extend(texts_test)
+        count_extr.fit(all_texts)
+        cnt_train = count_extr.transform(texts_train); n_train = cnt_train.shape[0]
+        cnt_test = count_extr.transform(texts_test); n_test = cnt_test.shape[0]
+        #print(type(cnt_train), cnt_train.shape)
+        bert, dset = bert_loader['bert'], bert_loader['dset']
+        trans_train = bert_feature_loader(dataset=dset, bert=bert, split=bert_loader['train_label'],
+                                          features='transformer')
+        #trans_train = np.ones((n_train, 700))
+        trans_train = csr_matrix(trans_train)
+        final_train = hstack([cnt_train, trans_train])
+        print(type(final_train), final_train.shape)
+        #trans_test = bert_feature_loader(dataset=dset, bert=bert, split=bert_loader['test_label'],
+        #                                  features='transformer')
+        trans_test = np.ones((n_test, trans_train.shape[1]))
+        trans_test = csr_matrix(trans_test)
+        final_test = hstack([cnt_test, trans_test])
+        print(type(final_test), final_test.shape)
+        feats_train = final_train
+        feats_test = final_test
     elif features == 'wcount':
         fextr = wcount_features(bigrams=bigrams, binary=binary)
         all_texts = []; all_texts.extend(texts_train); all_texts.extend(texts_test)
         fextr.fit(all_texts)
     elif features == 'tfidf-cro': fextr = cro24_load_tfidf()
     elif features == 'tfidf-est': fextr = est_load_tfidf()
-    feats_train = fextr.transform(texts_train)
-    feats_test = fextr.transform(texts_test)
+    if transform:
+        feats_train = fextr.transform(texts_train)
+        feats_test = fextr.transform(texts_test)
     # train model
     classif = create_classifier_grid(classifier, balanced=balanced)
     classif.fit(feats_train, labels_train)
@@ -119,7 +157,7 @@ def create_classifier_grid(classifier='logreg', balanced=False):
         # cvFitter = GridSearchCV(estimator=pipe, param_grid=grid, cv=5,
         #                         scoring='f1', verbose=True, n_jobs=3)
         cvFitter = GridSearchCV(estimator=model, param_grid=paramgrid, cv=5,
-                                scoring='f1', verbose=True, n_jobs=3)
+                                scoring='f1', verbose=True, n_jobs=1)
         return cvFitter
 
 def create_train_classifier(train, features='bert', classifier='logreg', subsample=False, rseed=883):
@@ -161,7 +199,11 @@ def test_classifier(c, data, subsample=False, rseed=883):
     else: texts, labels = data
     labels_predict = c.predict(texts)
     # calculate
-    f1 = f1_score(labels, labels_predict)
-    precision = precision_score(labels, labels_predict)
-    recall = recall_score(labels, labels_predict)
+    evaluate_predictions(labels_predict, labels)
+
+def evaluate_predictions(labels_predict, labels_correct):
+    f1 = f1_score(labels_correct, labels_predict)
+    precision = precision_score(labels_correct, labels_predict)
+    recall = recall_score(labels_correct, labels_predict)
     print(f"f1: {f1:1.3f}, precision: {precision:1.3f}, recall: {recall:1.3f}")
+    return [f1, precision, recall]
