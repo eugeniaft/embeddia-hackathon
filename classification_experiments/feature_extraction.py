@@ -83,17 +83,12 @@ def bert_feature_test():
     #bert_features(bert_folder, texts, features='transformer')
     bert_features(bert_folder, texts, features='predict')
 
-def bert_feature_create(dset='cro'):
-    bert_folder = BERT_CRO_V0
-    # bert_feature_loader(dset, 'dev', bert=bert_folder, features='predict')
-    # print('dev-fin')
-    # bert_feature_loader(dset, 'train', bert=bert_folder, features='transformer')
-    # print('train-feats-fin')
-    bert_feature_loader(dset, 'dev', bert=bert_folder, features='transformer')
-    # bert_feature_loader(dset, 'test', bert=bert_folder, features='predict')
-    # print('dev-fin')
-    # bert_feature_loader(dset, 'train', bert=bert_folder, features='predict')
-    # print('train-predict-fin')
+def bert_feature_create(dset='cro', bert_folder = BERT_CRO_V0):
+    for split in ['train', 'dev', 'test']:
+        bert_feature_loader(dset, split, bert=bert_folder, features='transformer')
+        print(f'{split}-trans-fin')
+        bert_feature_loader(dset, split, bert=bert_folder, features='predict')
+        print(f'{split}-predict-fin')
 
 if __name__ == '__main__':
     #bert_feature_test()
