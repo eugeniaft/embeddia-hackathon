@@ -4,22 +4,15 @@
 import torch
 from classification_experimental.datasets_for_finetune import DATA_LOADERS, TaskDataset
 from hackashop_datasets.load_data import train_dev_test
-# from datasets import load_metric
 from sklearn.metrics import f1_score, precision_score, recall_score, accuracy_score
 from transformers import AutoModelForSequenceClassification, \
-    TrainingArguments, Trainer, AutoTokenizer
+    TrainingArguments, Trainer, AutoTokenizer, AutoModel
 from argparse import ArgumentParser
 import numpy as np
 from torch.utils.data import DataLoader, SequentialSampler
 import torch.nn.functional as F
 import pandas as pd
 
-# metric = load_metric('glue', 'sst2')
-
-# def compute_metrics(eval_pred):
-#     predictions, labels = eval_pred
-#     predictions = np.argmax(predictions, axis=1)
-#     return metric.compute(predictions=predictions, references=labels)
 
 def compute_metrics(eval_pred):
     predictions, labels = eval_pred
@@ -28,7 +21,7 @@ def compute_metrics(eval_pred):
     pre = precision_score(labels, predictions)
     rec = recall_score(labels, predictions)
     acc = accuracy_score(labels, predictions)
-    return {'acc': acc, 'rec': rec, 'f1': f1, 'pre': pre}
+    return {'accuracy': acc, 'recall': rec, 'f1-score': f1, 'precision': pre}
 
 def trainer(args):
     random_seed = args.random_seed
@@ -134,6 +127,29 @@ def predict_fn(device, fine_tuned_model, max_len, texts, tokenizer):
                             'label': label
                             })
     return results
+
+
+def features_finetuned_model(text, labels, fine_tuned_model, max_len, device):
+    '''
+    Get embedding layer from fine tuned model to use for classification task
+    device: torch.device('cuda') or torch.device('cpu')
+    fine_tuned_model: directory of fine tuned model
+    max_len: use the length that had been used for fine-tuning
+    texts: array of strings from data loaders
+    '''
+    dataset = TaskDataset(texts=text, labels=labels, max_len=max_len,
+                          tokenizer='EMBEDDIA/crosloengual-bert')
+    data_loader = DataLoader(dataset, sampler=SequentialSampler(dataset), batch_size=1)
+    finetuned_model = AutoModel.from_pretrained(fine_tuned_model)
+    finetuned_model.to(device)
+    with torch.no_grad():
+        for batch in data_loader:
+            input_ids = batch['input_ids'].to(device)
+            attention_mask = batch['attention_mask'].to(device)
+            outputs = finetuned_model(input_ids, attention_mask)
+            pooled_output = torch.mean(outputs[0], 1)
+            embeddings = pooled_output.cpu().detach().numpy()
+            yield embeddings
 
 
 if __name__ == '__main__':
