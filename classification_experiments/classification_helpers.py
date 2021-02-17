@@ -99,9 +99,9 @@ def build_and_test_classifier_split(train, test, classifier='logreg', balanced=F
         trans_train = csr_matrix(trans_train)
         final_train = hstack([cnt_train, trans_train])
         print(type(final_train), final_train.shape)
-        #trans_test = bert_feature_loader(dataset=dset, bert=bert, split=bert_loader['test_label'],
-        #                                  features='transformer')
-        trans_test = np.ones((n_test, trans_train.shape[1]))
+        trans_test = bert_feature_loader(dataset=dset, bert=bert, split=bert_loader['test_label'],
+                                          features='transformer')
+        #trans_test = np.ones((n_test, trans_train.shape[1]))
         trans_test = csr_matrix(trans_test)
         final_test = hstack([cnt_test, trans_test])
         print(type(final_test), final_test.shape)
@@ -157,7 +157,7 @@ def create_classifier_grid(classifier='logreg', balanced=False):
         # cvFitter = GridSearchCV(estimator=pipe, param_grid=grid, cv=5,
         #                         scoring='f1', verbose=True, n_jobs=3)
         cvFitter = GridSearchCV(estimator=model, param_grid=paramgrid, cv=5,
-                                scoring='f1', verbose=True, n_jobs=1)
+                                scoring='f1', verbose=True, n_jobs=3)
         return cvFitter
 
 def create_train_classifier(train, features='bert', classifier='logreg', subsample=False, rseed=883):
