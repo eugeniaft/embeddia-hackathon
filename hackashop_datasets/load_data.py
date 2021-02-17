@@ -19,8 +19,7 @@ def load_toxic_en_data():
 	d4 = hasoc2019.load_hasoc_data()
 	d5 = troll.load_troll_data()
 
-    data = tuple(x + y + z + g + f 
-    	for x,y,z,g,f in zip(d1, d2, d3, d4, d5))
+	data = tuple(x + y + z + g + f for x,y,z,g,f in zip(d1, d2, d3, d4, d5))
 
 	return data
 
