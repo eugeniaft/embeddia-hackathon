@@ -1,4 +1,4 @@
-from hackashop_datasets import socc, ynacc, wiki
+from hackashop_datasets import socc, ynacc, wiki, hasoc2019, troll
 from sklearn.model_selection import train_test_split
 
 
@@ -6,14 +6,22 @@ def load_toxic_en_data():
 	'''
 	Loads all english data sets with 
 	defined toxic labels for the socc
-	and ynacc dataset and defined toxic
+	ynacc dataset and defined toxic
 	aggresive and attack label for wiki dataset 
+	hasoc hate/ofensive label
+	troll derogatory, hate speech, profanity
+
 	'''
+	
 	d1 = wiki.load_wiki_data()
 	d2 = socc.load_socc_data()
 	d3 = ynacc.load_ynacc_data()
+	d4 = hasoc2019.load_hasoc_data()
+	d5 = troll.load_troll_data()
 
-	return tuple(x + y + z for x, y, z in zip(d1, d2, d3))
+	data = tuple(x + y + z + g + f for x,y,z,g,f in zip(d1, d2, d3, d4, d5))
+
+	return data
 
 
 def train_dev_test(data, labels, random_seed):
@@ -27,12 +35,12 @@ def train_dev_test(data, labels, random_seed):
     	train_labels, test_size=0.1/0.9, stratify=train_labels, 
     	random_state=random_seed)
 
-    split_data = {'train': (train, train_labels),
+    data_split = {'train': (train, train_labels),
                   'dev': (dev, dev_labels),
                   'test': (test, test_labels)
                   }
 
-    return split_data
+    return data_split
 
 
 
