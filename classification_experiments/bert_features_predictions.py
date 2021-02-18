@@ -10,6 +10,7 @@ import numpy as np
 from torch.utils.data import DataLoader, SequentialSampler
 import torch.nn.functional as F
 
+
 def predict_fn(fine_tuned_model, max_len, texts,
                tokenizer='EMBEDDIA/crosloengual-bert', torch_device='cpu'):
     '''
@@ -39,7 +40,7 @@ def predict_fn(fine_tuned_model, max_len, texts,
             outputs = model(input_ids, token_type_ids=token_type_ids,
                             attention_mask=attention_mask)
             logits = outputs.logits
-            #probs = torch.max(F.softmax(logits, dim=1)).cpu().detach().numpy().item()
+            # probs = torch.max(F.softmax(logits, dim=1)).cpu().detach().numpy().item()
             probs = F.softmax(logits, dim=1).cpu().detach().numpy()[0]
             label = torch.argmax(logits).cpu().detach().numpy().item()
             results.append({'probs': probs,
@@ -67,7 +68,9 @@ def features_finetuned_model(text, labels, fine_tuned_model, max_len, torch_devi
         for batch in data_loader:
             input_ids = batch['input_ids'].to(device)
             attention_mask = batch['attention_mask'].to(device)
-            outputs = finetuned_model(input_ids, attention_mask)
+            token_type_ids = batch['token_type_ids'].to(device)
+            outputs = finetuned_model(input_ids, token_type_ids=token_type_ids,
+                                      attention_mask=attention_mask)
             pooled_output = torch.mean(outputs[0], 1)
             embeddings = pooled_output.cpu().detach().numpy()
             yield embeddings
