@@ -8,6 +8,7 @@ from classification_experiments.bert_features_predictions import predict_fn, fea
 
 # Bert folders/ids
 BERT_CRO_V0 = 'crosloengual-bert-42-toxicity-2e-5-256'
+BERT_CRO_V1 = 'crosloengual-bert_42_toxicity_allENdata_2e-05_128'
 
 def tfidf_features(max_feats=None, bigrams=False):
     fextr = TfidfVectorizer(max_features=max_feats, sublinear_tf=True)
@@ -25,7 +26,7 @@ def wcount_features(max_feats=None, binary=True, bigrams=False):
                           ("bigrams", fextr_2g)])
     return union
 
-def bert_features(bert_folder, texts, features, max_len=256):
+def bert_features(bert_folder, texts, features, max_len=128, torch_device='cpu'):
     '''
     :param bert_folder: folder within BERT_FOLDER (from project_settings.py)
     :param texts: list of texts
@@ -36,21 +37,21 @@ def bert_features(bert_folder, texts, features, max_len=256):
     model_folder = data_dir / bert_folder
     if features == 'transformer':
         feats = features_finetuned_model(texts, labels=None, fine_tuned_model=model_folder,
-                                         max_len=max_len)
+                                         max_len=max_len, torch_device=torch_device)
         feats = [f[0] for f in feats]
         #for f in feats: print(f.shape, f.dtype)
         res = np.array(feats)
         #print(res.shape)
         return res
     if features == 'predict':
-        results = predict_fn(model_folder, texts=texts, max_len=max_len)
+        results = predict_fn(model_folder, texts=texts, max_len=max_len, torch_device=torch_device)
         probs = [r['probs'] for r in results]
         labels = [r['label'] for r in results]
         probs = np.array(probs)
         labels = np.array(labels)
         return probs, labels
 
-def bert_feature_loader(dataset, split, bert, features, label=''):
+def bert_feature_loader(dataset, split, bert, features, label='', max_len=128, torch_device='cpu'):
     '''
     Creates BERT features for a specific dataset and configuration and saves them.
      If saved features exist, return saved.
@@ -72,7 +73,8 @@ def bert_feature_loader(dataset, split, bert, features, label=''):
     else:
         if dataset == 'cro': texts, _ = cro24_load_forclassif(split)
         elif dataset == 'est': texts, _ = est_load_forclassif(split)
-        result = bert_features(bert, texts, features=features)
+        result = bert_features(bert, texts, features=features,
+                               max_len=max_len, torch_device=torch_device)
         dump(result, open(file_path, 'wb'))
         return result
 
@@ -83,11 +85,13 @@ def bert_feature_test():
     #bert_features(bert_folder, texts, features='transformer')
     bert_features(bert_folder, texts, features='predict')
 
-def bert_feature_create(dset='cro', bert_folder = BERT_CRO_V0):
-    for split in ['train', 'dev', 'test']:
+def bert_feature_create(dset='cro', bert_folder = BERT_CRO_V1,
+                        max_len=128, torch_device='cuda'):
+    for split in ['dev', 'train', 'test']:
         bert_feature_loader(dset, split, bert=bert_folder, features='transformer')
         print(f'{split}-trans-fin')
-        bert_feature_loader(dset, split, bert=bert_folder, features='predict')
+        bert_feature_loader(dset, split, bert=bert_folder, features='predict',
+                            max_len=max_len, torch_device=torch_device)
         print(f'{split}-predict-fin')
 
 if __name__ == '__main__':
