@@ -3,7 +3,8 @@ import torch
 from hackashop_datasets.panbot import load_panbot
 from hackashop_datasets.ynacc import load_ynacc_data
 from hackashop_datasets.load_data import load_toxic_en_data
-
+from hackashop_datasets.cro_24sata import load_cro_train, load_cro_train2
+from hackashop_datasets.est_express import load_est_train, load_est_train2
 
 class TaskDataset(torch.utils.data.Dataset):
     '''
@@ -29,5 +30,20 @@ class TaskDataset(torch.utils.data.Dataset):
 DATA_LOADERS = {
     'ynacc': load_ynacc_data,
     'en_toxic': load_toxic_en_data,
-    'pan_bot': load_panbot
+    'pan_bot': load_panbot,
+    'cro_train': load_cro_train, # 40.000 examples
+    'cro_train_large': load_cro_train2, # 80.000 examples
+    'est_train': load_est_train, # 40.000 examples
+    'est_train_large': load_est_train2 # 80.000 examples
 }
+
+def croest_loaders_test():
+    for l in ['cro_train', 'cro_train_large', 'est_train', 'est_train_large']:
+        loader = DATA_LOADERS[l]
+        texts, labels = loader()
+        print(l)
+        print(labels[:3]); print(texts[:3])
+        print()
+
+if __name__ == '__main__':
+    croest_loaders_test()
