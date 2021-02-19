@@ -150,6 +150,8 @@ def est_load_tfidf():
 # interface methods for bert data loader
 def load_est_train(): return est_load_forclassif('train')
 def load_est_train2(): return est_load_forclassif('train2')
+def load_est_dev(): return est_load_forclassif('dev')
+def load_est_dev2(): return est_load_forclassif('dev2')
 
 if __name__ == '__main__':
     #estexpress_load_raw()

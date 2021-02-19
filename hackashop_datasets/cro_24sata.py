@@ -200,6 +200,9 @@ def cro24_load_tfidf():
 # interface methods for bert data loader
 def load_cro_train(): return cro24_load_forclassif('train')
 def load_cro_train2(): return cro24_load_forclassif('train2')
+def load_cro_dev(): return cro24_load_forclassif('dev')
+def load_cro_dev2(): return cro24_load_forclassif('dev2')
+
 
 if __name__ == '__main__':
     #cro24sata_explore()
