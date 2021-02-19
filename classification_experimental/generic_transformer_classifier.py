@@ -28,6 +28,7 @@ def trainer(args):
     task_name = args.task_name
     data, labels = DATA_LOADERS[args.dataset]()
     pretrained_model = args.pretrained_model
+    tokenizer = args.tokenizer
     lr = args.lr
     max_len = args.max_len
 
@@ -36,11 +37,11 @@ def trainer(args):
     train_dataset = task_clf(texts=data_splits['train'][0], 
                              labels=data_splits['train'][1], 
                              max_len=max_len,
-                             tokenizer=pretrained_model)
+                             tokenizer=tokenizer)
     val_dataset = task_clf(texts=data_splits['dev'][0], 
                            labels=data_splits['dev'][1], 
                            max_len=max_len,
-                           tokenizer=pretrained_model)
+                           tokenizer=tokenizer)
 
     # fine-tune/train BERT model for classification
     model = AutoModelForSequenceClassification.from_pretrained(
@@ -158,7 +159,8 @@ if __name__ == '__main__':
     # parser.add_argument('--dataset_path', type=str)
     parser.add_argument('--task_name', type=str)
     parser.add_argument('--random_seed', type=int)
-    parser.add_argument('--pretrained_model', choices=['EMBEDDIA/crosloengual-bert'])
+    parser.add_argument('--pretrained_model')
+    parser.add_argument('--tokenizer')
     parser.add_argument('--finetuned_model')
     parser.add_argument('--max_len', type=int)
     parser.add_argument('--num_label', type=int)

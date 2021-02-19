@@ -147,6 +147,11 @@ def est_load_tfidf():
     save_dir = Path(EST_EXPRESS_DATASET); savefile = save_dir / 'est_tfidf_2g.pickle'
     return load(open(savefile, 'rb'))
 
+# interface methods for bert data loader
+def load_est_train(): return est_load_forclassif('train')
+def load_est_train2(): return est_load_forclassif('train2')
+def load_est_dev(): return est_load_forclassif('dev')
+def load_est_dev2(): return est_load_forclassif('dev2')
 
 if __name__ == '__main__':
     #estexpress_load_raw()
@@ -155,7 +160,7 @@ if __name__ == '__main__':
     #clean_dataset()
     #print_dataset(est_express_load())
     #label_distribution(estexpress_load_raw())
-    #label_distribution(est_express_load())
-    #est_balance_dataset(40000, 10000, 10000)
+    label_distribution(est_express_load())
+    #est_balance_dataset(80000, 15000, 15000)
     #est_validate_split()
-    est_build_tfidf()
+    #est_build_tfidf()

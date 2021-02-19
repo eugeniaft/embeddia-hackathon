@@ -27,6 +27,18 @@ def print_dataset(dset):
     shuffle(texts)
     for t in texts[:1000]: print('['+t+']')
 
+def print_blocked_sample(dset, label = 'all'):
+    print('shape: ', dset.shape)
+    labels = dset['infringed_on_rule']
+    texts = dset['content']
+    blocked = []
+    for i in dset.index:
+        if label == 'all':
+            if not isnan(labels[i]): blocked.append(texts[i])
+        elif labels[i] == label: blocked.append(texts[i])
+    shuffle(blocked)
+    for t in texts[:1000]: print('['+t+']')
+
 def label_distribution(dset):
     N = float(len(dset))
     lmap = {}; nonblck = 0.0
@@ -185,16 +197,24 @@ def cro24_load_tfidf():
     save_dir = Path(CRO_24SATA_DATASET); savefile = save_dir / 'cro24_tfidf_2g.pickle'
     return load(open(savefile, 'rb'))
 
+# interface methods for bert data loader
+def load_cro_train(): return cro24_load_forclassif('train')
+def load_cro_train2(): return cro24_load_forclassif('train2')
+def load_cro_dev(): return cro24_load_forclassif('dev')
+def load_cro_dev2(): return cro24_load_forclassif('dev2')
+
+
 if __name__ == '__main__':
     #cro24sata_explore()
     #cro24sata_filterbyyear(2019)
     #print_dataset(cro24sata_load_byyear(2019, label='_nosmallcat'))
-    #label_distribution(cro24sata_load_byyear(2019))
+    label_distribution(cro24sata_load_byyear(2019, label='_nosmallcat'))
     #cro24sata_unbalanced_offensive()
     #cro24data_label_sample(4.0)
     #cro24sata_filter_categories(2019, [2.0, 4.0, 7.0], '_nosmallcat')
-    #cro24sata_balance_dataset(2019, '_nosmallcat', 40000, 10000, 10000)
+    #cro24sata_balance_dataset(2019, '_nosmallcat', 80000, 15000, 15000)
     #cro24_validate_split()
-    cro24_build_tfidf()
+    #cro24_build_tfidf()
     #cro24_load_tfidf()
+    #print_blocked_sample(cro24sata_load_byyear(2019, label='_nosmallcat'), label=3.0)
 
