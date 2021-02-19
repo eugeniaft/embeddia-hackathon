@@ -36,7 +36,7 @@ def svm_grid():
     return SVC(), { 'C': [0.01, 0.1, 1, 10, 100],
                     'gamma': ['auto', 0.01, 0.1, 1, 10, 100]}
 
-def build_classifier(c):
+def build_classifier(c, balanced=False):
     '''
     Factory method building scikit-learn classifiers.
     :param c: classifier label
@@ -48,7 +48,15 @@ def build_classifier(c):
         elif classif == 'rf': return  randomforest_grid()
         elif classif == 'svm': return svm_grid()
     else:
+        class_weight = 'balanced' if balanced else None
         if c == 'logreg':
             return LogisticRegression(solver='liblinear', max_iter=1000, penalty='l1', C=1.0)
+        elif c == 'logreg-cro': # best on CRO24 sata (gridsearch)
+            C = 1.0 if not balanced else 10.0
+            return LogisticRegression(solver='liblinear', max_iter=100, penalty='l1', C=C,
+                                      class_weight=class_weight)
+        elif c == 'logreg-est':  # best on EST Ekspress (gridsearch)
+            return LogisticRegression(solver='liblinear', max_iter=100, penalty='l1', C=10.0,
+                                      class_weight=class_weight)
         elif c == 'svc':
             return SVC()

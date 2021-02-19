@@ -2,7 +2,7 @@ import random, numpy as np
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import f1_score, precision_score, recall_score
+from sklearn.metrics import f1_score, precision_score, recall_score, accuracy_score
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.svm import SVC
@@ -60,9 +60,10 @@ class IndexTransformer():
 
 def build_and_test_classifier_split(train, test, classifier='logreg', balanced=False,
                                     features='bert', bigrams=False, binary=True,
-                                    label = '', rseed=572,
+                                    label = '', rseed=572, opt_metrics='f1',
                                     bert_loader =
-                                    {'dset':'', 'train_label':'', 'test_label':'', 'bert':''}):
+                                    {'dset':'', 'train_label':'', 'test_label':'', 'bert':'',
+                                     'features':'predict'}):
     '''
     Build and test binary classifier on a train/test split data.
     :param train: (texts, labels) pair - list of texts, list of binary labels
@@ -74,7 +75,8 @@ def build_and_test_classifier_split(train, test, classifier='logreg', balanced=F
     texts_test, labels_test = test
     N = len(texts_train);
     print(f'classification {label}: {classifier}, bal:{balanced}, '
-          f'feats:{features}, bigrams:{bigrams}, binary:{binary}, seed:{rseed}, train size: {N}')
+          f'feats:{features}, bigrams:{bigrams}, binary:{binary}, opt:{opt_metrics}, '
+          f'seed:{rseed}, train size: {N}')
     np.random.seed(rseed)
     # prepare data
     # feature extraction
@@ -84,27 +86,30 @@ def build_and_test_classifier_split(train, test, classifier='logreg', balanced=F
         fextr = tfidf_features(bigrams=bigrams)
         all_texts = []; all_texts.extend(texts_train); all_texts.extend(texts_test)
         fextr.fit(all_texts)
-    elif features == 'tfidf+bert':
+    elif features == 'tfidf+bert' or features == 'wcount+bert':
         transform = False
-        count_extr = tfidf_features(bigrams=bigrams)
+        if features.startswith('tfidf'):
+            count_extr = tfidf_features(bigrams=bigrams)
+        else:
+            count_extr = wcount_features(bigrams=bigrams, binary=binary)
         all_texts = []; all_texts.extend(texts_train); all_texts.extend(texts_test)
         count_extr.fit(all_texts)
         cnt_train = count_extr.transform(texts_train); n_train = cnt_train.shape[0]
         cnt_test = count_extr.transform(texts_test); n_test = cnt_test.shape[0]
         #print(type(cnt_train), cnt_train.shape)
-        bert, dset = bert_loader['bert'], bert_loader['dset']
+        bert, dset, bert_feats = bert_loader['bert'], bert_loader['dset'], bert_loader['features']
         trans_train = bert_feature_loader(dataset=dset, bert=bert, split=bert_loader['train_label'],
-                                          features='transformer')
+                                          features=bert_feats)
+        if bert_feats == 'predict': trans_train, _ = trans_train
         #trans_train = np.ones((n_train, 700))
         trans_train = csr_matrix(trans_train)
         final_train = hstack([cnt_train, trans_train])
-        print(type(final_train), final_train.shape)
+        #print(type(final_train), final_train.shape)
         trans_test = bert_feature_loader(dataset=dset, bert=bert, split=bert_loader['test_label'],
-                                          features='transformer')
-        #trans_test = np.ones((n_test, trans_train.shape[1]))
+                                          features=bert_feats)
+        if bert_feats == 'predict': trans_test, _ = trans_test
         trans_test = csr_matrix(trans_test)
         final_test = hstack([cnt_test, trans_test])
-        print(type(final_test), final_test.shape)
         feats_train = final_train
         feats_test = final_test
     elif features == 'wcount':
@@ -117,7 +122,7 @@ def build_and_test_classifier_split(train, test, classifier='logreg', balanced=F
         feats_train = fextr.transform(texts_train)
         feats_test = fextr.transform(texts_test)
     # train model
-    classif = create_classifier_grid(classifier, balanced=balanced)
+    classif = create_classifier_grid(classifier, balanced=balanced, opt_metrics=opt_metrics)
     classif.fit(feats_train, labels_train)
     if ('grid' in classifier): print(classif.best_params_, classif.best_score_)
     # calculate
@@ -138,7 +143,7 @@ def create_classifier(features='bert', classifier='logreg'):
     pipe = Pipeline(pipe)
     return pipe
 
-def create_classifier_grid(classifier='logreg', balanced=False):
+def create_classifier_grid(classifier='logreg', balanced=False, opt_metrics='f1'):
     '''
     Factory method building scikit-learn classifiers, possibly
      wrapped in a crossvalidation fitter using grid search.
@@ -157,8 +162,10 @@ def create_classifier_grid(classifier='logreg', balanced=False):
         # cvFitter = GridSearchCV(estimator=pipe, param_grid=grid, cv=5,
         #                         scoring='f1', verbose=True, n_jobs=3)
         cvFitter = GridSearchCV(estimator=model, param_grid=paramgrid, cv=5,
-                                scoring='f1', verbose=True, n_jobs=3)
+                                scoring=opt_metrics, verbose=True, n_jobs=3)
         return cvFitter
+    else:
+        return build_classifier(classifier, balanced)
 
 def create_train_classifier(train, features='bert', classifier='logreg', subsample=False, rseed=883):
     '''
@@ -205,5 +212,6 @@ def evaluate_predictions(labels_predict, labels_correct):
     f1 = f1_score(labels_correct, labels_predict)
     precision = precision_score(labels_correct, labels_predict)
     recall = recall_score(labels_correct, labels_predict)
-    print(f"f1: {f1:1.3f}, precision: {precision:1.3f}, recall: {recall:1.3f}")
+    acc = accuracy_score(labels_correct, labels_predict)
+    print(f"f1: {f1:1.3f}, precision: {precision:1.3f}, recall: {recall:1.3f}, acc: {acc:1.3f}")
     return [f1, precision, recall]
