@@ -9,6 +9,7 @@ from classification_experiments.bert_features_predictions import predict_fn, fea
 # Bert folders/ids
 BERT_CRO_V0 = 'crosloengual-bert-42-toxicity-2e-5-256'
 BERT_CRO_V1 = 'crosloengual-bert_42_toxicity_allENdata_2e-05_128'
+BERT_EST_V1 = 'finest-bert_42_toxicity_allENdata_2e-05_128'
 
 def tfidf_features(max_feats=None, bigrams=False):
     fextr = TfidfVectorizer(max_features=max_feats, sublinear_tf=True)
@@ -66,7 +67,9 @@ def bert_feature_loader(dataset, split, bert, features, label='', max_len=128, t
     from hackashop_datasets.est_express import est_load_forclassif
     from pickle import dump, load
     from project_settings import FEAT_EXTRACT_CACHE
-    fname = f'bert_features_dset:{dataset}_split:{split}_label:{label}_features:{features}_bert:[{bert}]'
+    #fname = f'bert_features_dset:{dataset}_split:{split}_label:{label}_features:{features}_bert:[{bert}]'
+    #bert_features_dset_est_split_train_label__features_transformer_bert_[crosloengual-bert_42_toxicity_allENdata_2e-05_128]
+    fname = f'bert_features_dset_{dataset}_split_{split}_label_{label}_features_{features}_bert_[{bert}]'
     file_path = Path(FEAT_EXTRACT_CACHE) / fname
     if (file_path.exists()):
         return load(open(file_path, 'rb'))
@@ -85,15 +88,16 @@ def bert_feature_test():
     #bert_features(bert_folder, texts, features='transformer')
     bert_features(bert_folder, texts, features='predict')
 
-def bert_feature_create(dset='cro', bert_folder = BERT_CRO_V1,
-                        max_len=128, torch_device='cuda'):
-    for split in ['dev', 'train', 'test']:
-        bert_feature_loader(dset, split, bert=bert_folder, features='transformer')
-        print(f'{split}-trans-fin')
+def bert_feature_create(dset='est', bert_folder = BERT_CRO_V1,
+                        max_len=128, torch_device='cpu', splits = ['dev', 'train', 'test']):
+    for split in splits:
+        # bert_feature_loader(dset, split, bert=bert_folder, features='transformer')
+        # print(f'{split}-trans-fin')
         bert_feature_loader(dset, split, bert=bert_folder, features='predict',
                             max_len=max_len, torch_device=torch_device)
         print(f'{split}-predict-fin')
 
 if __name__ == '__main__':
     #bert_feature_test()
-    bert_feature_create()
+    #bert_feature_create(dset='est', bert_folder=BERT_EST_V1, splits=['test2'])
+    bert_feature_create(dset='cro', bert_folder=BERT_CRO_V1, splits=['test2'])
