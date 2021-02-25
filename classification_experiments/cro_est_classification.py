@@ -108,6 +108,14 @@ def est_classifier_best(label='EST BEST', classifier='logreg-est', balanced=Fals
                                     classifier=classifier, balanced=balanced,
                                     features='wcount', bigrams=True, label=label)
 
+def f1_baselines():
+    from classification_experiments.classification_helpers import calculate_baseline_f1
+    # minority class proportions
+    cro_min, est_min = 0.0777, 0.0899
+    print('CRO'); calculate_baseline_f1(cro_min)
+    print('EST'); calculate_baseline_f1(est_min)
+
+
 if __name__ == '__main__':
     #cro_classifier_v0()
     #cro_classifier_grid(opt_metrics='precision')
@@ -115,9 +123,10 @@ if __name__ == '__main__':
     #classifier_grid(lang='est', label='EST GRID', opt_metrics='precision')
     #evaluate_bert_labels(bert=BERT_EST_V1, dset='est', split='test2')
     #test_combined_features()
-    cro_classifier_best(classifier='logreg-cro', balanced=False)
+    #cro_classifier_best(classifier='logreg-cro', balanced=False)
     #cro_classifier_best(classifier='logreg-cro-recall', balanced=True)
-    est_classifier_best(classifier='logreg-est', balanced=False)
+    #est_classifier_best(classifier='logreg-est', balanced=False)
     #est_classifier_best(classifier='logreg-est-recall', balanced=True)
     #cro_classifier_grid_bert()
     #evaluate_bert_labels(bert=BERT_CRO_V1, dset='cro', split='test2')
+    f1_baselines()

@@ -215,3 +215,20 @@ def evaluate_predictions(labels_predict, labels_correct):
     acc = accuracy_score(labels_correct, labels_predict)
     print(f"f1: {f1:1.3f}, precision: {precision:1.3f}, recall: {recall:1.3f}, acc: {acc:1.3f}")
     return [f1, precision, recall]
+
+def calculate_baseline_f1(minority):
+    '''
+    Calculate f1 scores of several baseline binary classifiers.
+    :param minority: proportion of the minorty class, in <0, 1> range
+    '''
+    min, maj = minority, 1.0 - minority
+    # alway choose minority class
+    min_always = 2*min/(min+1)
+    print(f'always min F1: {min_always:1.3f}')
+    # predict minority with 50% chance
+    min_50 = 2*min*0.5/(min+0.5)
+    print(f'min 50% F1: {min_50:1.3f}')
+    # pridict minority with chance min (orig. proportion)
+    min_min = min
+    print(f'min min F1: {min_min:1.3f}')
+
