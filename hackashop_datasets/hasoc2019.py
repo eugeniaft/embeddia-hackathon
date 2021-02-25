@@ -2,7 +2,7 @@ import pandas as pd
 from pathlib import Path
 import csv
 
-from project_settings import HASOC2019_DATASET
+from project_settings_template import HASOC2019_DATASET
 
 def hasoc_load_raw(path=HASOC2019_DATASET, part='all'):
     '''
