@@ -55,8 +55,14 @@ def build_classifier(c, balanced=False):
             C = 1.0 if not balanced else 10.0
             return LogisticRegression(solver='liblinear', max_iter=100, penalty='l1', C=C,
                                       class_weight=class_weight)
+        elif c == 'logreg-cro-recall': # best recall on CRO24 sata (gridsearch)
+            return LogisticRegression(solver='liblinear', max_iter=100, penalty='l1', C=0.1,
+                                      class_weight='balanced')
         elif c == 'logreg-est':  # best on EST Ekspress (gridsearch)
             return LogisticRegression(solver='liblinear', max_iter=100, penalty='l1', C=10.0,
                                       class_weight=class_weight)
+        elif c == 'logreg-est-recall':  # bestrecall  on EST Ekspress (gridsearch)
+            return LogisticRegression(solver='liblinear', max_iter=100, penalty='l1', C=0.01,
+                                      class_weight='balanced')
         elif c == 'svc':
             return SVC()

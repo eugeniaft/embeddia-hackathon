@@ -88,12 +88,12 @@ def test_combined_features():
                                      'bert': BERT_CRO_V1}
                                     )
 
-def cro_classifier_best(label='CRO BEST', balanced=False):
-    train = cro24_load_forclassif('train')
-    dev = cro24_load_forclassif('dev')
+def cro_classifier_best(label='CRO BEST', classifier='logreg-cro', balanced=False):
+    train = cro24_load_forclassif('train2')
+    dev = cro24_load_forclassif('test2')
     build_and_test_classifier_split(train, dev,
-                                    classifier='logreg-cro', balanced=balanced,
-                                    features='wcount+bert', bigrams=True, label=label,
+                                    classifier=classifier, balanced=balanced,
+                                    features='wcount', bigrams=True, label=label,
                                     bert_loader=
                                     {
                                         'dset': 'cro', 'train_label': 'train', 'test_label': 'dev',
@@ -101,11 +101,11 @@ def cro_classifier_best(label='CRO BEST', balanced=False):
                                         'bert': BERT_CRO_V1}
                                     )
 
-def est_classifier_best(label='EST BEST', balanced=False):
+def est_classifier_best(label='EST BEST', classifier='logreg-est', balanced=False):
     train = est_load_forclassif('train2')
     dev = est_load_forclassif('test2')
     build_and_test_classifier_split(train, dev,
-                                    classifier='logreg-est', balanced=balanced,
+                                    classifier=classifier, balanced=balanced,
                                     features='wcount', bigrams=True, label=label)
 
 if __name__ == '__main__':
@@ -115,9 +115,9 @@ if __name__ == '__main__':
     #classifier_grid(lang='est', label='EST GRID', opt_metrics='precision')
     #evaluate_bert_labels(bert=BERT_EST_V1, dset='est', split='test2')
     #test_combined_features()
-    #cro_classifier_best(balanced=False)
-    #cro_classifier_best(balanced=True)
-    #est_classifier_best(balanced=False)
-    #est_classifier_best(balanced=True)
+    cro_classifier_best(classifier='logreg-cro', balanced=False)
+    #cro_classifier_best(classifier='logreg-cro-recall', balanced=True)
+    est_classifier_best(classifier='logreg-est', balanced=False)
+    #est_classifier_best(classifier='logreg-est-recall', balanced=True)
     #cro_classifier_grid_bert()
-    evaluate_bert_labels(bert=BERT_CRO_V1, dset='cro', split='test2')
+    #evaluate_bert_labels(bert=BERT_CRO_V1, dset='cro', split='test2')
