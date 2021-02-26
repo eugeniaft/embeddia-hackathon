@@ -9,7 +9,7 @@ from classification_experiments.classification_helpers import \
 from hackashop_datasets.cro_24sata import cro24_load_forclassif
 from hackashop_datasets.est_express import est_load_forclassif
 from classification_experiments.feature_extraction import \
-    bert_feature_loader, BERT_CRO_V0, BERT_CRO_V1, BERT_EST_V1
+    bert_feature_loader, BERT_CRO_V0, BERT_CRO_V1, BERT_EST_V1, BERT_CRO_FINETUNE
 
 def cro_classifier_v0():
     train = cro24_load_forclassif('train')
@@ -71,8 +71,8 @@ def evaluate_bert_labels(bert, dset='cro', split='dev'):
     if dset == 'cro': _, labels = cro24_load_forclassif(split)
     elif dset == 'est': _, labels = est_load_forclassif(split)
     _, labels_bert = bert_feature_loader(dset, split, bert=bert, features='predict')
-    ones = np.ones(shape=labels_bert.shape)
-    labels_bert = ones - labels_bert
+    #ones = np.ones(shape=labels_bert.shape)
+    #labels_bert = ones - labels_bert
     evaluate_predictions(labels_bert, labels)
 
 def test_combined_features():
@@ -115,13 +115,32 @@ def f1_baselines():
     print('CRO'); calculate_baseline_f1(cro_min)
     print('EST'); calculate_baseline_f1(est_min)
 
+def cro_subcategories_recall():
+    # labels: 1 (Disallowed content), 3 (Hate Speech), 5 (Deception& trolling), 6 (Vulgarity), 8 (Abuse)
+    for label in [1.0, 3.0, 5.0, 6.0, 8.0]:
+        texts, labels = cro24_load_forclassif('test2', label)
+        print(f'LABEL: {label}')
+        # only trained on english
+        #_, labels_bert = bert_feature_loader('cro', 'test2', bert=BERT_CRO_V1, features='predict')
+        #print('BERT-EN')
+        #evaluate_predictions(labels_bert, labels)
+        #fine tuned on cro
+        _, labels_bert = bert_feature_loader('cro', 'test2', bert=BERT_CRO_FINETUNE, features='predict')
+        print('BERT-CRO')
+        evaluate_predictions(labels_bert, labels)
+        # print('NATIVE-RECALL')
+        # train = cro24_load_forclassif('train2')
+        # dev = texts, labels
+        # build_and_test_classifier_split(train, dev,
+        #                             classifier='logreg-cro-recall', balanced=True,
+        #                             features='wcount', bigrams=True, label='')
 
 if __name__ == '__main__':
     #cro_classifier_v0()
     #cro_classifier_grid(opt_metrics='precision')
     #est_classifier_v0()
     #classifier_grid(lang='est', label='EST GRID', opt_metrics='precision')
-    #evaluate_bert_labels(bert=BERT_EST_V1, dset='est', split='test2')
+    #evaluate_bert_labels(bert=BERT_CRO_FINETUNE, dset='cro', split='test2')
     #test_combined_features()
     #cro_classifier_best(classifier='logreg-cro', balanced=False)
     #cro_classifier_best(classifier='logreg-cro-recall', balanced=True)
@@ -129,4 +148,5 @@ if __name__ == '__main__':
     #est_classifier_best(classifier='logreg-est-recall', balanced=True)
     #cro_classifier_grid_bert()
     #evaluate_bert_labels(bert=BERT_CRO_V1, dset='cro', split='test2')
-    f1_baselines()
+    #f1_baselines()
+    cro_subcategories_recall()

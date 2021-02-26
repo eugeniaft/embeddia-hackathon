@@ -155,26 +155,38 @@ def cro24_validate_split():
     assert(len(ixtr.intersection(ixdv)) == 0)
     assert(len(ixts.intersection(ixdv)) == 0)
 
-def cro24_texts_labels_from_dframe(dset):
+def cro24_texts_labels_from_dframe(dset, classlabel=None):
+    '''
+    :param dset: dataframe with comment data
+    :param classlabel: None for blocked/nonblocked, otherwise numeric class label
+    :return:
+    '''
     label_column = dset['infringed_on_rule']
     text_column = dset['content']
     texts, labels = [], []
     for i in dset.index:
         l = label_column[i]
-        if isnan(l): label = 0
-        else: label = 1;
+        if classlabel is None:
+            if isnan(l): label = 0
+            else: label = 1;
+        else:
+            if l == classlabel:
+                #print('hit')
+                label = 1
+            else: label = 0
         labels.append(label)
         texts.append(text_column[i])
     return texts, labels
 
-def cro24_load_forclassif(part):
+def cro24_load_forclassif(part, label=None):
     '''
     Loading of final datasets used for classification experiments
     :param part - 'train', 'dev', or 'test'
+    :param label: None to return blocked/nonblocked lables, otherwise a numeric subcategory label
     :returns texts, labels
     '''
     dset = cro24sata_load_byyear(2019, label=f'_nosmallcat_{part}')
-    return cro24_texts_labels_from_dframe(dset)
+    return cro24_texts_labels_from_dframe(dset, label)
 
 def cro24_build_tfidf():
     from pickle import dump

@@ -10,6 +10,7 @@ from classification_experiments.bert_features_predictions import predict_fn, fea
 BERT_CRO_V0 = 'crosloengual-bert-42-toxicity-2e-5-256'
 BERT_CRO_V1 = 'crosloengual-bert_42_toxicity_allENdata_2e-05_128'
 BERT_EST_V1 = 'finest-bert_42_toxicity_allENdata_2e-05_128'
+BERT_CRO_FINETUNE = 'crosloengual-bert_42_noblock_large_crotian_2e-05_128'
 
 def tfidf_features(max_feats=None, bigrams=False):
     fextr = TfidfVectorizer(max_features=max_feats, sublinear_tf=True)
@@ -100,4 +101,4 @@ def bert_feature_create(dset='est', bert_folder = BERT_CRO_V1,
 if __name__ == '__main__':
     #bert_feature_test()
     #bert_feature_create(dset='est', bert_folder=BERT_EST_V1, splits=['test2'])
-    bert_feature_create(dset='cro', bert_folder=BERT_CRO_V1, splits=['test2'])
+    bert_feature_create(dset='cro', bert_folder=BERT_CRO_FINETUNE, splits=['test2'])
