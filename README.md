@@ -2,7 +2,7 @@
 
 This repository includes all the source code for the experiments and dataset creation as part of the work done during the [2021 EMBEDDIA Hackashop](http://embeddia.eu/hackashop2021/)
 
-More details are given in our paper.
+More details are given in our [paper.](https://www.aclweb.org/anthology/2021.hackashop-1.18/)
 
 ### English flagged / not flagged Dataset
 
